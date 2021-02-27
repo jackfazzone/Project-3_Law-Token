@@ -3,7 +3,7 @@
 ## Members
 * Jexi Amaris
 * Anthony "Jack" Fazzone
-* Carlos Garcia
+* Gonzalo Garcia
 * Olanrewaju Ogubufunmi
 <br><br>
 ## Description
