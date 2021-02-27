@@ -1,12 +1,43 @@
+# LawToken
+
+* Jexi Amaris
+* Anthony "Jack" Fazzone
+* Carlos Garcia
+* Olanrewaju Ogubufunmi
+
+
+LawToken, a new way to process civil lawsuits.
+
 0. Description of Project, Goals, Methods
 	A. Attorney determines terms of representation 
 	B. Equity in judgment is issued from crowdsale of tokens
 	C. Proceeds from crowdsale fund litigation
 
-I. Function to register case with us to determine needed capital from crowdsale
-	A. Accepts flat fee + expenses needed to finance the case right now as uint
-	B. Description of case, details of injury, dates, deadlines to secure funding and file case, insurance company filing against, location of case, defendant, estimate value of damage, information on attorney or firm representing plaintiff
-	C. Graduated incentive fee structure for attorney
+
+## Project pipeline
+
+I. Create a function to initiate case on the blockchain. Function should require: <br>
+<ol>A. Attorney details: 
+<ol>Name of attorney </li><br>
+Name of law firm</ol></li></ol>
+	
+<ol>B. Case details:
+<ol>Description of case </li><br>
+Date and location of accident </li><br>
+Details of injury to victim </li><br>
+Opposing insurance company </li><br>
+Estimated value of damage </ol></li></ol>
+
+<ol>C. Financial details:
+<ol> Amount requested to fund case (attorney's expenses) </li><br>
+Deadline to secure funding </li><br>
+Estimated range of settlement </li><br>
+Setllement percentage split </li><br>
+Graduated incentive fee structure of attorney </li></ol></ol><br>
+
+
+
+
 
 II. Once value determined in I is reached, mint tokens that represent equity in judgment to attorney and investors
 	A. create .py file to execute and record transfers of Law Tokens to investors
