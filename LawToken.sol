@@ -4,6 +4,11 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 
 contract LawToken is ERC721Full {
+    
+    bool public ended;
+    address public investor;
+    uint public amount;
+    event fundingEnded(address investor, uint estimatedSettlement);
 
     constructor() ERC721Full("LawToken", "CLS") public { }
 
@@ -24,7 +29,7 @@ contract LawToken is ERC721Full {
 
     event caseSentenced(uint tokenId, string reportURI);
 
-    function registerCivilCase(address caseOwner,
+    function registerCivilCase(address payable caseOwner,
         string memory caseDescription,
         string memory eventLocation,
         string memory eventDate,
@@ -33,7 +38,8 @@ contract LawToken is ERC721Full {
         uint damageEstimatedValue,
         string memory lawFirm,
         string memory attorney,
-        string memory fundingDeadline,
+        uint fundingAmount,
+        uint fundingDeadline,
         string memory estimatedRangeSettlement,
         uint setllementPercentageSplit,
         string memory attorneyIncentiveFeeStructure, 
@@ -43,13 +49,38 @@ contract LawToken is ERC721Full {
       tokenCounter.increment();
       uint caseId = tokenCounter.current();
       
+      fundingDeadline = now + 30 days;
+      
       _mint(caseOwner, caseId);
       _setTokenURI(caseId, caseURI);
       
       CivilCases[caseId] = CivilCase(caseDescription, attorney, 0, 0);
 
         return caseId;
+        }
+    function fundingcase(address caseOwner, uint amount, address investor ) public{}
+    
+    function cancelCivilCasending(address investor) public view returns (uint) {
+        return amount[investor];
+        //In case the funding amount is not full fill
+    
+     }
+    
+    function endFunding() public{
+        require(fundingAmount < caseOwner.balance, "Civil case has been funded.");
+        
+        ended = true;
+        emit fundingEnded(fundingAmount);
+
+        beneficiary = caseOwner;
+        beneficiary.transfer(estimatedSettlement);
+        investor.transfer(estimatedSettlement);
+        
+        caseOwner[address]=0;
+        }
       
     }
+      
+      
       
       
