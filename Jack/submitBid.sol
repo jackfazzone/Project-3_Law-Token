@@ -90,10 +90,9 @@ contract ALawFirm {
     function reportCaseResult(uint token_id, string memory report_uri) private returns(uint) {
         firms[token_id].cases += 1;
 
-        // Permanently associates the report_uri with the token_id on-chain via Events for a lower gas-cost than storing directly in the contract's storage.
         emit Result(token_id, report_uri);
 
-        return cars[token_id].accidents;
+        return firms[token_id].;
         
         
         
