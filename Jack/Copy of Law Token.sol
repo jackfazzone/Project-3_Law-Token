@@ -3,7 +3,6 @@ pragma solidity ^0.5.0;
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 
-import "./equityCoin.sol";
 
 contract LawToken is ERC721Full {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
@@ -182,10 +181,10 @@ contract LawToken is ERC721Full {
         require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
         
         // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
-        CivilCases[caseId].firmName = bids[bidID].firmName;
-        CivilCases[caseId].firmEquity = bids[bidID].firmEquity;
-        CivilCases[caseId].fundingDeadline = bids[bidID].fundingDeadline;
-        CivilCases[caseId].fundingAmount = bids[bidID].lumpSumBid;
+        CivilCases[caseId].firmName = bids[caseId][bidID].firmName;
+        CivilCases[caseId].firmEquity = bids[caseId][bidID].firmEquity;
+        CivilCases[caseId].fundingDeadline = bids[caseId][bidID].fundingDeadline;
+        CivilCases[caseId].fundingAmount = bids[caseId][bidID].lumpSumBid;
         
         emit caseAssigned(caseId);
         
