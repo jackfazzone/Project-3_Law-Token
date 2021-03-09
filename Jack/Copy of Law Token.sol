@@ -6,12 +6,9 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5
 contract LawToken is ERC721Full {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
      // bool public ended;
-    address payable public investor;
-    address[] private bids;
     //address payable public caseOwner;
     bool public ended;
     //uint fundingAmount;
-    address payable public investor;
     //uint public amount;
     uint public caseBalance;
     //uint estimatedSettlement;
@@ -64,7 +61,7 @@ contract LawToken is ERC721Full {
     }
     
     struct Bid {
-        uint caseID;
+        uint caseId;
         address payable lawFirm;
         uint firmID;
         string firmName;
@@ -82,8 +79,8 @@ contract LawToken is ERC721Full {
     mapping(uint => LawFirm) public firms;
     mapping(uint => Bid) private bids;
 
-    event bidPlaced(uint caseID);
-    event caseAssigned(uint caseID, string caseURI);
+    event bidPlaced(uint caseId);
+    event caseAssigned(uint caseId);
     event caseSentenced(uint tokenId, string reportURI);
   
 // What if we list and mint with empty values on the attorney/ firm params and then update them after assignment with an "Attorney Assigned" emission?
@@ -96,7 +93,7 @@ contract LawToken is ERC721Full {
         string memory eventDate,
         string memory plaintiffInjury,
         string memory defendant,
-        uint totalSuitExpenses,             // given by assigned attorney
+        uint totalSuitExpenses,             // given by assigned attorney or average?
         string memory firmName,
        // address payable lawFirm,
         string memory attorney,             
@@ -149,7 +146,7 @@ contract LawToken is ERC721Full {
     function submitBid(address payable lawFirm,
         string memory firmName,
         string memory firmID,               // can probably cut one or two of these, but I'll leave them in in case we want to require that the three values match in our firms mapping
-        uint caseID,                        // maybe a list of bids isn't worth putting on-chain
+        uint caseId,                        // maybe a list of bids isn't worth putting on-chain
         uint lumpSumBid,
         uint equityBid,
         uint fundingDeadline,
@@ -162,63 +159,39 @@ contract LawToken is ERC721Full {
         bidCounter.increment();
         uint bidID = bidCounter.current();
         
-        _plaintiff = CivilCases[caseID].caseOwner;
-        
+        address payable _plaintiff = CivilCases[caseId].caseOwner;
+
         _mint(_plaintiff, bidID);
         _setTokenURI(bidID, bidURI);
         
-        bids[bidID] = Bid(caseID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message);
-        
         // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
-        bids.push(bid);
+        bids[caseId].push(Bid(bidID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message));
         
         return bidID;
-        emit bidPlaced(caseID);
+        emit bidPlaced(caseId);
         
-        }
+    }
 
-    function viewBids(uint caseID) returns(address[]) {
-        require(CivilCases[caseID].caseOwner == msg.sender, "You are not authorized to review bids for this case.");
+    function viewBids(uint caseId) public {
+        require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to review bids for this case.");
         
-        return bids;
+        return bids[caseId];
     }
     
-    function selectBid(uint caseID, uint bidID) public {
-        require(CivilCases[caseID].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
+    function selectBid(uint caseId, uint bidID) public {
+        require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
         
         // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
-        CivilCases[caseID].firmName = bids[bidID].firmName;
-        CivilCases[caseID].firmEquity = bids[bidID].firmEquity;
-        CivilCases[caseID].fundingDeadline = bids[bidID].fundingDeadline;
-        CivilCases[caseID].fundingAmount = bids[bidID].lumpSumBid;
+        CivilCases[caseId].firmName = bids[bidID].firmName;
+        CivilCases[caseId].firmEquity = bids[bidID].firmEquity;
+        CivilCases[caseId].fundingDeadline = bids[bidID].fundingDeadline;
+        CivilCases[caseId].fundingAmount = bids[bidID].lumpSumBid;
         
-        emit caseAssigned(caseID,caseURI);
+        emit caseAssigned(caseId);
         
     }    
-    function fundingcase(address caseOwner, uint amount, address investor ) public{}
     
-    function cancelCivilCasending(address investor) public view returns (uint) {
-        return amount[investor];
-        //In case the funding amount is not full fill
-    
-     }
-    
-    function endFunding() public{
-        require(fundingAmount < caseOwner.balance, "Civil case has been funded.");
-        require(fundingDeadline > now, "Case funded before deadline.");
-        
-        ended = true;
-        emit fundingEnded(fundingAmount); // What if we had it emit the information we need to issue ERC20 tokens? Case URI?
-
-        beneficiary = caseOwner;
-        beneficiary.transfer(estimatedSettlement);
-        investor.transfer(estimatedSettlement);
-        
-        caseOwner[address]=0;
-        }
-      
-           
-    // funding the civil case 
+// funding the civil case 
     function fundingcase() public payable {
         require(msg.value < CivilCases[caseId].fundingAmount, "The amount to invest exceeded the asking funding.");
         caseBalance = address(this).balance;
@@ -263,7 +236,6 @@ contract LawToken is ERC721Full {
         }
       
     }
-      
       
       
       
