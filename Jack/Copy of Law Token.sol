@@ -4,10 +4,33 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 
 contract LawToken is ERC721Full {
-    
+    // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
+     // bool public ended;
+    address payable public investor;
+    address[] private bids;
+    //address payable public caseOwner;
     bool public ended;
-    address public investor;
-    uint public amount;
+    //uint fundingAmount;
+    address payable public investor;
+    //uint public amount;
+    uint public caseBalance;
+    //uint estimatedSettlement;
+    address public lastToWithdraw;
+    uint public lastWithdrawBlock;
+    uint public lastWithdrawAmount;
+    
+    
+    uint unlockTime;
+    
+    mapping(address => uint) returnFunds;
+    
+    //mapping(address => uint) litigants;
+    
+    // Allowed withdrawals of the case funding
+    mapping(address => uint) WithdrawFunds;
+    
+    
+     // end the case 
     event fundingEnded(address investor, uint estimatedSettlement);
 
     constructor() ERC721Full("LawToken", "CLS") public { }
@@ -15,6 +38,7 @@ contract LawToken is ERC721Full {
     using Counters for Counters.Counter;
     Counters.Counter caseCounter;
     Counters.Counter firmCounter;
+    Counters.Counter bidCounter;
     
 
     struct CivilCase {
@@ -40,10 +64,13 @@ contract LawToken is ERC721Full {
     }
     
     struct Bid {
+        uint caseID;
+        address payable lawFirm;
         uint firmID;
         string firmName;
-        uint lumpSumBid;
+        uint lumpSumBid;                                    // probably don't want to use a struct for this 
         uint equityBid;
+        uint fundingDeadline;
         string message;
         
     
@@ -55,7 +82,7 @@ contract LawToken is ERC721Full {
     mapping(uint => LawFirm) public firms;
     mapping(uint => Bid) private bids;
 
-    event bidPlaced(uint bidID, bidURI)
+    event bidPlaced(uint caseID);
     event caseAssigned(uint caseID, string caseURI);
     event caseSentenced(uint tokenId, string reportURI);
   
@@ -83,8 +110,8 @@ contract LawToken is ERC721Full {
         string memory attorneyIncentiveFeeStructure, 
         
         string memory caseURI) public returns(uint) {
-        require(msg.sender == caseCounter, "You are not authorized to register this case on behalf of the plaintiff account specified.");
-        require(CivilCases[caseId] == )
+        require(msg.sender == caseOwner, "You are not authorized to register this case on behalf of the plaintiff account specified."); // can only register case from account associated with plaintiff (maybe change?)
+        //require(CivilCases[caseId].caseOwner == null || CivilCases[caseId.caseOwner == msg.sender, "You are not authorized to amend information for this case."]) // ensure case not already registered
         //Implement registerCivilCase
         caseCounter.increment();
         uint caseId = caseCounter.current();
@@ -122,21 +149,52 @@ contract LawToken is ERC721Full {
     function submitBid(address payable lawFirm,
         string memory firmName,
         string memory firmID,               // can probably cut one or two of these, but I'll leave them in in case we want to require that the three values match in our firms mapping
+        uint caseID,                        // maybe a list of bids isn't worth putting on-chain
         uint lumpSumBid,
         uint equityBid,
+        uint fundingDeadline,
         string memory message,
         
         string memory bidURI) private returns(uint) {
         
-        require(msg.sender == lawFirm, "You are not authorized to submit this bid on based on your provided credentials.");
+        require(msg.sender == lawFirm, "You are not authorized to submit this bid based on your provided credentials.");
+        
+        bidCounter.increment();
+        uint bidID = bidCounter.current();
+        
+        _plaintiff = CivilCases[caseID].caseOwner;
+        
+        _mint(_plaintiff, bidID);
+        _setTokenURI(bidID, bidURI);
+        
+        bids[bidID] = Bid(caseID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message);
+        
+        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
+        bids.push(bid);
+        
+        return bidID;
+        emit bidPlaced(caseID);
         
         }
-    
-    function selectfirm();
 
-        emit caseAssigned
+    function viewBids(uint caseID) returns(address[]) {
+        require(CivilCases[caseID].caseOwner == msg.sender, "You are not authorized to review bids for this case.");
         
+        return bids;
+    }
+    
+    function selectBid(uint caseID, uint bidID) public {
+        require(CivilCases[caseID].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
         
+        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
+        CivilCases[caseID].firmName = bids[bidID].firmName;
+        CivilCases[caseID].firmEquity = bids[bidID].firmEquity;
+        CivilCases[caseID].fundingDeadline = bids[bidID].fundingDeadline;
+        CivilCases[caseID].fundingAmount = bids[bidID].lumpSumBid;
+        
+        emit caseAssigned(caseID,caseURI);
+        
+    }    
     function fundingcase(address caseOwner, uint amount, address investor ) public{}
     
     function cancelCivilCasending(address investor) public view returns (uint) {
@@ -157,6 +215,51 @@ contract LawToken is ERC721Full {
         investor.transfer(estimatedSettlement);
         
         caseOwner[address]=0;
+        }
+      
+           
+    // funding the civil case 
+    function fundingcase() public payable {
+        require(msg.value < CivilCases[caseId].fundingAmount, "The amount to invest exceeded the asking funding.");
+        caseBalance = address(this).balance;
+        require(CivilCases[caseId].fundingAmount == caseBalance, "The civil case has not be funded");
+        
+    }
+    
+    /// Withdraw the funding.
+    function withdraw() public{
+        require( msg.sender == CivilCases[caseId].caseOwner, "You do not own this account");
+        require( now >= unlockTime, "Your account is currently locked");
+        uint amount = WithdrawFunds[msg.sender];
+        
+        if (lastToWithdraw != msg.sender) {
+            lastToWithdraw = msg.sender;
+        }
+        lastWithdrawAmount = amount;
+        lastWithdrawBlock = block.number;
+        
+        if (amount > address(this).balance / 5){
+        unlockTime = now + 5 days;
+        }
+    }
+    
+    function endFunding() public{
+        require(CivilCases.fundingAmount < address(this).balance, "Civil case has been funded.");
+        require(msg.sender == CivilCases[caseId].caseOwner, "You are not the case owner!");
+        
+        ended = true;
+        emit fundingEnded(investor, CivilCases[caseId].estimatedSettlement);
+
+        //beneficiary = caseOwner;
+        //beneficiary.transfer(estimatedSettlement);
+        investor.transfer(CivilCases[caseId].estimatedSettlement);
+        
+        CivilCases.caseOwner =address(0);
+        }
+        
+    //In case the funding amount is not full fill return the fundings to investors
+    function cancelCivilCase() public view returns (uint) {
+        return returnFunds[investor];
         }
       
     }
