@@ -3,6 +3,8 @@ pragma solidity ^0.5.0;
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 
+import "./equityCoin.sol";
+
 contract LawToken is ERC721Full {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
      // bool public ended;
@@ -98,9 +100,7 @@ contract LawToken is ERC721Full {
        // address payable lawFirm,
         string memory attorney,             
         uint fundingAmount,                 // up-front cash bid of winning firm (crowdsale goal)
-        uint firmEquity,                    // equity bid of winning (out of 100), will be no. of erc20s to distribute after funding
-        //uint estimatedSettlement,         // 100*(totalSuitExpenses - fundingAmount)/firmEquity ... maybe instead of graduated incentive fee structure?
-        //uint estimatedCoinValue,          // ^^ /100
+        uint firmEquity,                    
         uint fundingDeadline,
         string memory estimatedRangeSettlement,
         uint setllementPercentageSplit,
