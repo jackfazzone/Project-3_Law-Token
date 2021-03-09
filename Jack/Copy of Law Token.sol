@@ -26,21 +26,26 @@ contract LawToken is ERC721Full {
       string firm;
       uint firmEquity;
       //uint plaintiffEquity ?              // privacy vs relevant investment information
-      uint remainingFunding;
-      uint outstandingEquity;
-      uint estimatedEquityPrice;            // per 1 erc20, remainingFunding/outstandingEquity
-      uint estimatedEquityValue;            // from estimated settlement provided when firm assigned ... these ^ should be the same
-      uint estimatedSettlement;
       uint fundingDeadline;
     }
     
     struct LawFirm {
-    address payable lawFirm;
-    string firmName;
-    string practceArea;
-    string state;
-    string city;
-    string message;
+        address payable lawFirm;
+        string firmName;
+        string practceArea;
+        string state;
+        string city;
+        string message;
+    
+    }
+    
+    struct Bid {
+        uint firmID;
+        string firmName;
+        uint lumpSumBid;
+        uint equityBid;
+        string message;
+        
     
     }
 
@@ -48,8 +53,10 @@ contract LawToken is ERC721Full {
     // Only permanent data that you would need to use in a smart contract later should be stored on-chain
     mapping(uint => CivilCase) public CivilCases;
     mapping(uint => LawFirm) public firms;
+    mapping(uint => Bid) private bids;
 
-    event caseAssigned(uint tokenID, string reportURI);
+    event bidPlaced(uint bidID, bidURI)
+    event caseAssigned(uint caseID, string caseURI);
     event caseSentenced(uint tokenId, string reportURI);
   
 // What if we list and mint with empty values on the attorney/ firm params and then update them after assignment with an "Attorney Assigned" emission?
@@ -76,6 +83,8 @@ contract LawToken is ERC721Full {
         string memory attorneyIncentiveFeeStructure, 
         
         string memory caseURI) public returns(uint) {
+        require(msg.sender == caseCounter, "You are not authorized to register this case on behalf of the plaintiff account specified.");
+        require(CivilCases[caseId] == )
         //Implement registerCivilCase
         caseCounter.increment();
         uint caseId = caseCounter.current();
@@ -90,7 +99,7 @@ contract LawToken is ERC721Full {
         return caseId;
         }
         
-     function registerLawFirm(
+    function registerLawFirm(
         string memory firmName,
         string memory practceArea,
         string memory state,
@@ -109,6 +118,23 @@ contract LawToken is ERC721Full {
         
         return firmID;
         }
+        
+    function submitBid(address payable lawFirm,
+        string memory firmName,
+        string memory firmID,               // can probably cut one or two of these, but I'll leave them in in case we want to require that the three values match in our firms mapping
+        uint lumpSumBid,
+        uint equityBid,
+        string memory message,
+        
+        string memory bidURI) private returns(uint) {
+        
+        require(msg.sender == lawFirm, "You are not authorized to submit this bid on based on your provided credentials.");
+        
+        }
+    
+    function selectfirm();
+
+        emit caseAssigned
         
         
     function fundingcase(address caseOwner, uint amount, address investor ) public{}
