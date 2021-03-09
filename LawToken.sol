@@ -4,16 +4,19 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 
 contract LawToken is ERC721Full {
-    
-    // bool public ended;
+    //address payable public caseOwner;
+    bool public ended;
+    //uint fundingAmount;
     address payable public investor;
-    uint public amount;
+    //uint public amount;
+    uint public caseBalance;
+    //uint estimatedSettlement;
     address public lastToWithdraw;
     uint public lastWithdrawBlock;
     uint public lastWithdrawAmount;
-  
+    
+    
     uint unlockTime;
-    uint now = now;
     
     mapping(address => uint) returnFunds;
     
@@ -21,6 +24,7 @@ contract LawToken is ERC721Full {
     
     // Allowed withdrawals of the case funding
     mapping(address => uint) WithdrawFunds;
+    
     
      // end the case 
     event fundingEnded(address investor, uint estimatedSettlement);
@@ -32,21 +36,20 @@ contract LawToken is ERC721Full {
 
     struct CivilCase {
       //Implement CivilCases struct
-      address payable caseOwner;
-      string memory caseDescription;
-      string memory eventLocation;
-      string memory eventDate;
-      string memory plaintiffInjury;
-      string memory defendant;
+      address caseOwner;
+      string caseDescription;
+      string eventLocation;
+      string eventDate;
+      string plaintiffInjury;
+      string defendant;
       uint damageEstimatedValue;
-      uint estimatedSettlement;
-      string memory lawFirm;
-      string memory attorney;
+      uint EstimatedSettlement;
+      string lawFirm;
+      string attorney;
       uint fundingAmount;
       uint fundingDeadline;
-      uint estimatedSettlement;
       uint setllementPercentageSplit;
-      string memory attorneyIncentiveFeeStructure;
+      string attorneyIncentiveFeeStructure;
     }
 
     // Stores tokenCounter => CivilCase
@@ -54,19 +57,18 @@ contract LawToken is ERC721Full {
     mapping(uint => CivilCase) public CivilCases;
     
    function registerCivilCase(
-      address payable public caseOwner,
+      address payable caseOwner,
       string memory caseDescription,
       string memory eventLocation,
       string memory eventDate,
       string memory plaintiffInjury,
       string memory defendant,
       uint damageEstimatedValue,
-      uint estimatedSettlement;
+      uint EstimatedSettlement,
       string memory lawFirm,
       string memory attorney,
       uint fundingAmount,
       uint fundingDeadline,
-      uint estimatedSettlement,
       uint setllementPercentageSplit,
       string memory attorneyIncentiveFeeStructure
         ) public returns(uint) {
@@ -78,22 +80,24 @@ contract LawToken is ERC721Full {
       
       _mint(caseOwner, caseId);
       
-      CivilCases[caseId] = CivilCase(caseDescription, attorney, 0, 0);
+      CivilCases[caseId] = CivilCase(caseOwner, caseDescription, eventLocation, eventDate, plaintiffInjury,
+        defendant, damageEstimatedValue, EstimatedSettlement, lawFirm, attorney, fundingAmount, fundingDeadline, setllementPercentageSplit,
+        attorneyIncentiveFeeStructure);
 
         return caseId;
         }
         
     // funding the civil case 
     function fundingcase() public payable {
-        require(msg.value < fundingAmount, "The amount to invest exceeded the asking funding.");
-        balanceContract = address(this).balance;
-        require(fundingAmount == balanceContract, "The civil case can not be funded")
+        require(msg.value < CivilCases[caseId].fundingAmount, "The amount to invest exceeded the asking funding.");
+        caseBalance = address(this).balance;
+        require(CivilCases[caseId].fundingAmount == caseBalance, "The civil case has not be funded");
         
     }
     
     /// Withdraw the funding.
     function withdraw() public{
-        require( ((msg.sender == caseOwner), "You do not own this account");
+        require( msg.sender == CivilCases[caseId].caseOwner, "You do not own this account");
         require( now >= unlockTime, "Your account is currently locked");
         uint amount = WithdrawFunds[msg.sender];
         
@@ -104,31 +108,28 @@ contract LawToken is ERC721Full {
         lastWithdrawBlock = block.number;
         
         if (amount > address(this).balance / 5){
-        unlockTime = now + 24 hours;
+        unlockTime = now + 5 days;
         }
     }
-    
-    //In case the funding amount is not full fill return the fundings to investors
-    function cancelCivilCase(address investor) public view returns (uint) {
-        return returnFunds[investor];
-       
-    
-     }
     
     function endFunding() public{
-        require(fundingAmount < address(this).balance, "Civil case has been funded.");
-        require(msg.sender == caseOwner, "You are not the case ownerr!");
+        require(CivilCases.fundingAmount < address(this).balance, "Civil case has been funded.");
+        require(msg.sender == CivilCases[caseId].caseOwner, "You are not the case owner!");
         
         ended = true;
-        emit fundingEnded(investor, estimatedSettlement);
+        emit fundingEnded(investor, CivilCases[caseId].estimatedSettlement);
 
-        beneficiary = caseOwner;
+        //beneficiary = caseOwner;
         //beneficiary.transfer(estimatedSettlement);
-        investor.transfer(estimatedSettlement);
+        investor.transfer(CivilCases[caseId].estimatedSettlement);
         
-        caseOwner =address(0);
+        CivilCases.caseOwner =address(0);
+        }
+        
+    //In case the funding amount is not full fill return the fundings to investors
+    function cancelCivilCase() public view returns (uint) {
+        return returnFunds[investor];
         }
       
     }
-      
       
