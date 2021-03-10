@@ -229,26 +229,45 @@ contract LawToken is ERC721Full, MintedCrowdsale {
 ///---------------------------------------------------------------------------------------------
 
 // Distribution
-contract investmentRemittance is ERC721Full  {
+contract settlementDistribution  {
+    
+    address payable depositorAccount = 0xc3879B456DAA348a16B6524CBC558d2CC984722c;
+    
+    // depositing settlement in contract (tailor to depositing)
+    function deposit(uint SettlementAmount, address payable depositor) public payable {
+    require(depositor == depositorAccount, "You are not authorized to deposit to this contract");
+    
+    SettlementAmount = address(this).balance;
+  }
+  
+  
     // Should always return 0! Use this to test your `deposit` function's logic
     function balance() public view returns(uint) {
         return address(this).balance;
     }
     
-    calculate investment percentage and create new array
+    
+    //create lists *********************************
+    
+    
+    
+    //calculate investment percentage and create new array
     function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
          for(uint i = 0; i < investmentPCT.length; ++i) {
             investmentPCT[i] = (investmentAmount[i] / fundingAmount);
         }}
+        
+        
         
     //payout function
     function remitSettlement (
         address payable caseOwner,
         address payable beneficiary,
         address payable[] memory investorList,
-        uint[] memory investmentPCT)
+        uint[] memory investmentPCT,
+        uint SettlementAmount)
         public {
-        uint acctBal = (address(this).balance) / 100;
+        uint acctBal = SettlementAmount / 100;
         uint total;
         uint amount;
         // Transfer lawyer equity to lawyer
@@ -266,7 +285,10 @@ contract investmentRemittance is ERC721Full  {
         //Transfer balance to beneficiary
         beneficiary.transfer(address(this).balance);
     }
+    
+
+    
 // has to be turned on eventually
-   //function() external payable {}
+   function() external payable {}
 }
  
