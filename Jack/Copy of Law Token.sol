@@ -2,6 +2,9 @@ pragma solidity ^0.5.0;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20Detailed.sol";
+
 
 
 contract LawToken is ERC721Full {
@@ -190,51 +193,107 @@ contract LawToken is ERC721Full {
         
     }    
     
-// funding the civil case 
-    function fundingcase() public payable {
-        require(msg.value < CivilCases[caseId].fundingAmount, "The amount to invest exceeded the asking funding.");
+// funding the civil case
+    function fundingcase( uint newFundingAmount) public payable {
+        tokenCounter.increment();
+        uint fundingRef = tokenCounter.current();
+        CivilCases[fundingRef] = CivilCase( newFundingAmount);
+        require(msg.value < CivilCases[fundingRef].newFundingAmount, "The amount to invest exceeded the asking funding.");
         caseBalance = address(this).balance;
-        require(CivilCases[caseId].fundingAmount == caseBalance, "The civil case has not be funded");
+        require(CivilCases[fundingRef].newFundingAmount == caseBalance, "The civil case has not be funded");
+    }
+    /// Withdraw the funding.
+    
+        
+//---------------------------Minting--------------------------------------------------------------------------------------
+        
+contract LawToken is ERC20, ERC20Detailed {
+    address payable owner;
+    mapping(address => uint) balances;
+    // address payable owner = msg.sender;
+
+    modifier onlyOwner {
+        require(msg.sender == owner, "You do not have permission to mint these tokens!");
+        _;
+    }
+
+    constructor(uint initial_supply) ERC20Detailed("LawToken", "LAWT", 18) public {
+        owner = msg.sender;
+        _mint(owner, initial_supply);
+    }
+    
+    //calculate investment percentage and create new array   
+    function investmentDistribution(address[] memory recipient, uint[] memory investmentAmount, uint[] memory investmentX, uint fundingAmount) public {
+        for(uint i = 0; i < investmentX.length; ++i) {
+            investmentX[i] = (investmentAmount[i] / fundingAmount);
+            mint(recipient[i], investmentX[i] * fundingAmount);
+            }
         
     }
     
-    /// Withdraw the funding.
-    function withdraw() public{
-        require( msg.sender == CivilCases[caseId].caseOwner, "You do not own this account");
+
+    function mint(address recipient, uint amount) public onlyOwner {
+        balances[recipient] = balances[recipient].add(amount);
+        _mint(recipient, amount);
+    }
+}
+
+
+    function withdraw(address payable newcaseOwner) public{
+        tokenCounter.increment();
+        uint withdrawgRef = tokenCounter.current();
+        CivilCases[withdrawgRef] = CivilCase( newcaseOwner);
+        require( msg.sender == CivilCases[withdrawgRef].newcaseOwner, "You do not own this account");
         require( now >= unlockTime, "Your account is currently locked");
         uint amount = WithdrawFunds[msg.sender];
-        
         if (lastToWithdraw != msg.sender) {
             lastToWithdraw = msg.sender;
         }
         lastWithdrawAmount = amount;
         lastWithdrawBlock = block.number;
-        
         if (amount > address(this).balance / 5){
         unlockTime = now + 5 days;
         }
-    }
-    
-    function endFunding() public{
-        require(CivilCases.fundingAmount < address(this).balance, "Civil case has been funded.");
-        require(msg.sender == CivilCases[caseId].caseOwner, "You are not the case owner!");
-        
-        ended = true;
-        emit fundingEnded(investor, CivilCases[caseId].estimatedSettlement);
 
-        //beneficiary = caseOwner;
-        //beneficiary.transfer(estimatedSettlement);
-        investor.transfer(CivilCases[caseId].estimatedSettlement);
-        
-        CivilCases.caseOwner =address(0);
-        }
-        
-    //In case the funding amount is not full fill return the fundings to investors
-    function cancelCivilCase() public view returns (uint) {
-        return returnFunds[investor];
-        }
-      
+//---------------------------------------------------------------------------------------------
+
+// Distribution
+contract investmentRemittance {
+    // Should always return 0! Use this to test your `deposit` function's logic
+    function balance() public view returns(uint) {
+        return address(this).balance;
     }
-      
-      
-      
+    //calculate investment percentage and create new array
+    function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
+        for(uint i = 0; i < investmentPCT.length; ++i) {
+            investmentPCT[i] = (investmentAmount[i] / fundingAmount);
+        }}
+    //payout function
+    function remitSettlement (
+        address payable caseOwner,
+        address payable beneficiary,
+        address payable[] memory investorList,
+        uint[] memory investmentPCT)
+        public {
+        uint acctBal = (address(this).balance) / 100;
+        uint total;
+        uint amount;
+        // Transfer lawyer equity to lawyer
+        amount = acctBal * 10; //change % to variable set in lawyer equity
+        total += amount;
+        caseOwner.transfer(amount);
+        //Transfer victim equity to victim
+        amount = acctBal * 10; //change % to variable set by lawyer
+        total += amount;
+        beneficiary.transfer(amount);
+        //Transfer investors equity to investors
+        for (uint i=0; i<investorList.length; i++) {
+            investorList[i].transfer(acctBal * (investmentPCT[i]));
+        }
+        //Transfer balance to beneficiary
+        beneficiary.transfer(address(this).balance);
+    }
+// has to be turned on eventually
+   //function() external payable {}
+}
+ 
