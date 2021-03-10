@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 
 // Distribution
-ntract investmentRemittance {
+contract investmentRemittance {
  
     // Should always return 0! Use this to test your `deposit` function's logic
     function balance() public view returns(uint) {

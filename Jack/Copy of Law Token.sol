@@ -1,15 +1,18 @@
 pragma solidity ^0.5.0;
-
+import "lawTokenMintable.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20Detailed.sol";
+<<<<<<< HEAD
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/Crowdsale.sol";
+=======
+>>>>>>> 6fb6248ffc36ff631cc4ce71581e82e903bacf8c
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/emission/MintedCrowdsale.sol";
 
 import "./equityCoin.sol";
 
-contract LawToken is ERC721Full {
+contract LawToken is ERC721Full, MintedCrowdsale {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
      // bool public ended;
     //address payable public caseOwner;
@@ -42,6 +45,8 @@ contract LawToken is ERC721Full {
     Counters.Counter caseCounter;
     Counters.Counter firmCounter;
     Counters.Counter bidCounter;
+    Counters.Counter fundingCounter;
+    Counters.Counter withdrawCounter;
     
 
     struct CivilCase {
@@ -67,6 +72,7 @@ contract LawToken is ERC721Full {
     }
     
     struct Bid {
+        uint caseId;
         address payable lawFirm;
         uint firmID;
         string firmName;
@@ -99,7 +105,7 @@ contract LawToken is ERC721Full {
         string memory plaintiffInjury,
         string memory defendant,
         uint totalSuitExpenses,             // given by assigned attorney or average?
-        string memory firmName,
+        string memory firm,
        // address payable lawFirm,
         string memory attorney,             
         uint fundingAmount,                 // up-front cash bid of winning firm (crowdsale goal)
@@ -107,9 +113,11 @@ contract LawToken is ERC721Full {
         uint fundingDeadline,
         string memory estimatedRangeSettlement,
         uint setllementPercentageSplit,
-        string memory attorneyIncentiveFeeStructure, 
+        string memory attorneyIncentiveFeeStructure 
         
-        string memory caseURI) public returns(uint) {
+        //string memory caseURI
+        ) 
+        public returns(uint) {
         require(msg.sender == caseOwner, "You are not authorized to register this case on behalf of the plaintiff account specified."); // can only register case from account associated with plaintiff (maybe change?)
         //require(CivilCases[caseId].caseOwner == null || CivilCases[caseId.caseOwner == msg.sender, "You are not authorized to amend information for this case."]) // ensure case not already registered
         //Implement registerCivilCase
@@ -118,10 +126,14 @@ contract LawToken is ERC721Full {
       
         fundingDeadline = now + 30 days;
       
+<<<<<<< HEAD
         _mint(caseOwner, caseId, 0);
         _setTokenURI(caseId, caseURI);
       
         CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, "No firm assigned.", 0,0);
+=======
+        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, firm, 0, 0);
+>>>>>>> 6fb6248ffc36ff631cc4ce71581e82e903bacf8c
 
         return caseId;
         }
@@ -141,8 +153,7 @@ contract LawToken is ERC721Full {
         firmCounter.increment();
         uint firmID = firmCounter.current();
         
-        _mint(msg.sender, firmID);
-        _setTokenURI(firmID, firmURI);
+        //_setTokenURI(firmID, firmURI);
         
         firms[firmID] = LawFirm(msg.sender,firmName, practceArea, state, city, message);
         
@@ -157,25 +168,18 @@ contract LawToken is ERC721Full {
         uint equityBid,
         uint fundingDeadline,
         string memory message,
-        
         string memory bidURI) private returns(uint) {
-        
         require(msg.sender == lawFirm, "You are not authorized to submit this bid based on your provided credentials.");
-        
         bidCounter.increment();
         uint bidID = bidCounter.current();
-        
+        bids[bidID] = Bid(0, lawFirm, firmName )
         address payable _plaintiff = CivilCases[caseId].caseOwner;
-
         _mint(_plaintiff, bidID);
         _setTokenURI(bidID, bidURI);
-        
         // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
         bids[caseId][bidID].push(Bid(msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message));
-        
         return bidID;
-        emit bidPlaced(caseId);
-        
+        emit bidPlaced(caseId);    
     }
     //------------------------Plaintiff Actions-----------------------------------------------------------------------
 
@@ -188,6 +192,7 @@ contract LawToken is ERC721Full {
     function selectBid(uint caseId, uint bidID) public {
         require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
         
+        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
         CivilCases[caseId].firmName = bids[caseId][bidID].firmName;
         CivilCases[caseId].firmEquity = bids[caseId][bidID].firmEquity;
         CivilCases[caseId].fundingDeadline = bids[caseId][bidID].fundingDeadline;
@@ -199,14 +204,13 @@ contract LawToken is ERC721Full {
     
 // funding the civil case
     function fundingcase( uint newFundingAmount) public payable {
-        tokenCounter.increment();
-        uint fundingRef = tokenCounter.current();
+        fundingCounter.increment();
+        uint fundingRef = fundingCounter.current();
         CivilCases[fundingRef] = CivilCase( newFundingAmount);
         require(msg.value < CivilCases[fundingRef].newFundingAmount, "The amount to invest exceeded the asking funding.");
         caseBalance = address(this).balance;
         require(CivilCases[fundingRef].newFundingAmount == caseBalance, "The civil case has not be funded");
     }
-    /// Withdraw the funding.
     
         
 //---------------------------ERC20 Minting--------------------------------------------------------------------------
@@ -244,9 +248,10 @@ contract equityCoinSale is Crowdsale, MintedCrowdsale {
 
 //---------------------------Withdraw Function------------------------------------------------------------------------
 
+     /// withdraw to pay attorney and case expenses
     function withdraw(address payable newcaseOwner) public{
-        tokenCounter.increment();
-        uint withdrawgRef = tokenCounter.current();
+        withdrawCounter.increment();
+        uint withdrawgRef = withdrawCounter.current();
         CivilCases[withdrawgRef] = CivilCase( newcaseOwner);
         require( msg.sender == CivilCases[withdrawgRef].newcaseOwner, "You do not own this account");
         require( now >= unlockTime, "Your account is currently locked");
@@ -259,27 +264,63 @@ contract equityCoinSale is Crowdsale, MintedCrowdsale {
         if (amount > address(this).balance / 5){
         unlockTime = now + 5 days;
         }
+    }
+        
+    //In case the funding amount is not full fill return the fundings to investors
+    function cancelCivilCase(address investor) public view returns (uint) {
+        return returnFunds[investor];
+        }
+    }
+        
+///---------------------------Minting--------------------------------------------------------------------------------------
+        
 
-//-----------------------------Distribution----------------------------------------------------------------------------
+
+<//-----------------------------Distribution----------------------------------------------------------------------------
 
 contract investmentRemittance {
-    // Should always return 0! Use this to test your `deposit` function's logic
+///---------------------------------------------------------------------------------------------
+
+// Distribution
+contract settlementDistribution  {
+    
+    address payable depositorAccount = 0xc3879B456DAA348a16B6524CBC558d2CC984722c;
+    
+    // depositing settlement in contract (tailor to depositing)
+    function deposit(uint SettlementAmount, address payable depositor) public payable {
+    require(depositor == depositorAccount, "You are not authorized to deposit to this contract");
+    
+    SettlementAmount = address(this).balance;
+  }
+  
+  
+   // Should always return 0! Use this to test your `deposit` function's logic
     function balance() public view returns(uint) {
         return address(this).balance;
     }
+    
+    
+    //create lists *********************************
+    
+    
+    
     //calculate investment percentage and create new array
     function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
-        for(uint i = 0; i < investmentPCT.length; ++i) {
+         for(uint i = 0; i < investmentPCT.length; ++i) {
             investmentPCT[i] = (investmentAmount[i] / fundingAmount);
         }}
+        
+        
+        
     //payout function
     function remitSettlement (
         address payable caseOwner,
         address payable beneficiary,
         address payable[] memory investorList,
-        uint[] memory investmentPCT)
+        uint[] memory investmentPCT,
+        uint SettlementAmount)
         public {
-        uint acctBal = (address(this).balance) / 100;
+        uint acctBal = SettlementAmount / 100;
         uint total;
         uint amount;
         // Transfer lawyer equity to lawyer
@@ -292,6 +333,17 @@ contract investmentRemittance {
         beneficiary.transfer(amount);
         //Transfer investors equity to investors
         for (uint i=0; i<investorList.length; i++) {
+            investorList[i].transfer(acctBal * (investmentPCT[i]));
+        }
+        //Transfer balance to beneficiary
+        beneficiary.transfer(address(this).balance);
+    }
+    
+
+    
+// has to be turned on eventually
+   function() external payable {}
+or (uint i=0; i<investorList.length; i++) {
             investorList[i].transfer(acctBal * (investmentPCT[i]));
         }
         //Transfer balance to beneficiary
