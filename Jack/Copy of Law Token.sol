@@ -1,13 +1,15 @@
 pragma solidity ^0.5.0;
 
+import "lawTokenMintable.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20Detailed.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/emission/MintedCrowdsale.sol";
 
 
 
-contract LawToken is ERC721Full {
+contract LawToken is ERC721Full, MintedCrowdsale {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
      // bool public ended;
     //address payable public caseOwner;
@@ -67,6 +69,7 @@ contract LawToken is ERC721Full {
     }
     
     struct Bid {
+        uint caseId;
         address payable lawFirm;
         uint firmID;
         string firmName;
@@ -99,7 +102,7 @@ contract LawToken is ERC721Full {
         string memory plaintiffInjury,
         string memory defendant,
         uint totalSuitExpenses,             // given by assigned attorney or average?
-        string memory firmName,
+        string memory firm,
        // address payable lawFirm,
         string memory attorney,             
         uint fundingAmount,                 // up-front cash bid of winning firm (crowdsale goal)
@@ -120,9 +123,7 @@ contract LawToken is ERC721Full {
       
         fundingDeadline = now + 30 days;
       
-        ///_mint(caseOwner, caseId, 0);
-              
-        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, "No firm assigned.", 0,0,0,0,0,0, fundingDeadline);
+        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, firm, 0, 0);
 
         return caseId;
         }
@@ -139,10 +140,9 @@ contract LawToken is ERC721Full {
         firmCounter.increment();
         uint firmID = firmCounter.current();
         
-        _mint(msg.sender, firmID);
         //_setTokenURI(firmID, firmURI);
         
-        firms[firmID] = LawFirm(msg.sender,firmName, practceArea, state, city, message, 0);
+        firms[firmID] = LawFirm(msg.sender,firmName, practceArea, state, city, message);
         
         return firmID;
         }
@@ -155,25 +155,18 @@ contract LawToken is ERC721Full {
         uint equityBid,
         uint fundingDeadline,
         string memory message,
-        
         string memory bidURI) private returns(uint) {
-        
         require(msg.sender == lawFirm, "You are not authorized to submit this bid based on your provided credentials.");
-        
         bidCounter.increment();
         uint bidID = bidCounter.current();
-        
+        bids[bidID] = Bid(0, lawFirm, firmName )
         address payable _plaintiff = CivilCases[caseId].caseOwner;
-
         _mint(_plaintiff, bidID);
-        //_setTokenURI(bidID, bidURI);
-        
+        _setTokenURI(bidID, bidURI);
         // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
         bids[caseId][bidID].push(Bid(msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message));
-        
         return bidID;
-        emit bidPlaced(caseId);
-        
+        emit bidPlaced(caseId);    
     }
 
     function viewBids(uint caseId) public {
@@ -185,6 +178,7 @@ contract LawToken is ERC721Full {
     function selectBid(uint caseId, uint bidID) public {
         require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
         
+        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
         CivilCases[caseId].firmName = bids[caseId][bidID].firmName;
         CivilCases[caseId].firmEquity = bids[caseId][bidID].firmEquity;
         CivilCases[caseId].fundingDeadline = bids[caseId][bidID].fundingDeadline;
@@ -230,36 +224,7 @@ contract LawToken is ERC721Full {
         
 ///---------------------------Minting--------------------------------------------------------------------------------------
         
-contract LawTokenMinting is ERC20, ERC20Detailed {
-    address payable owner;
-    mapping(address => uint) balances;
-    // address payable owner = msg.sender;
 
-    modifier onlyOwner {
-        require(msg.sender == owner, "You do not have permission to mint these tokens!");
-        _;
-    }
-
-    constructor(uint initial_supply) ERC20Detailed("LawToken", "LAWT", 18) public {
-        owner = msg.sender;
-        _mint(owner, initial_supply);
-    }
-    
-    //calculate investment percentage and create new array   
-    function investmentDistribution(address[] memory recipient, uint[] memory investmentAmount, uint[] memory investmentX, uint fundingAmount) public {
-        for(uint i = 0; i < investmentX.length; ++i) {
-            investmentX[i] = (investmentAmount[i] / fundingAmount);
-            mint(recipient[i], investmentX[i] * fundingAmount);
-            }
-        
-    }
-    
-
-    function mint(address recipient, uint amount) public onlyOwner {
-        balances[recipient] = balances[recipient].add(amount);
-        _mint(recipient, amount);
-    }
-}
 
 ///---------------------------------------------------------------------------------------------
 
