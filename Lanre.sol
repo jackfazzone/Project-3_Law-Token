@@ -2,28 +2,21 @@ pragma solidity ^0.5.0;
 
 
 // Distribution
-
-// If goal met, transfer balance to caseOwner
-//If settlement met, distribute funds to attorney, investors and possibly victim
-  //balance goes to victim
-
-
-// unsure if I need an actual contract
-contract investmentRemittance {
+ntract investmentRemittance {
  
     // Should always return 0! Use this to test your `deposit` function's logic
     function balance() public view returns(uint) {
         return address(this).balance;
     }
     
-    //------------------------------------------------------------------------------------------   
+    
     //calculate investment percentage and create new array   
     function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
         for(uint i = 0; i < investmentPCT.length; ++i) {
             investmentPCT[i] = (investmentAmount[i] / fundingAmount);
         }}
         
-    //------------------------------------------------------------------------------------------           
+        
     //payout function        
     function remitSettlement (
         address payable caseOwner, 
@@ -54,11 +47,12 @@ contract investmentRemittance {
         //Transfer balance to beneficiary
         beneficiary.transfer(address(this).balance);
     }
-    
 
-   //function() external payable {
-        
-     //  remitSettlement(caseOwner, beneficiary, investorlist, investmentPCT);
-    //}
+// has to be turned on eventually
+   //function() external payable {}
+    
 }
+
+
+
 
