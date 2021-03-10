@@ -234,11 +234,13 @@ contract investmentRemittance is ERC721Full  {
     function balance() public view returns(uint) {
         return address(this).balance;
     }
-    //calculate investment percentage and create new array
-    // function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
-    //     for(uint i = 0; i < investmentPCT.length; ++i) {
-    //         investmentPCT[i] = (investmentAmount[i] / fundingAmount);
-    //    }}
+    
+    calculate investment percentage and create new array
+    function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
+         for(uint i = 0; i < investmentPCT.length; ++i) {
+            investmentPCT[i] = (investmentAmount[i] / fundingAmount);
+        }}
+        
     //payout function
     function remitSettlement (
         address payable caseOwner,
