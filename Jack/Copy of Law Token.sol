@@ -40,6 +40,8 @@ contract LawToken is ERC721Full {
     Counters.Counter caseCounter;
     Counters.Counter firmCounter;
     Counters.Counter bidCounter;
+    Counters.Counter fundingCounter;
+    Counters.Counter withdrawCounter;
     
 
     struct CivilCase {
@@ -106,9 +108,11 @@ contract LawToken is ERC721Full {
         uint fundingDeadline,
         string memory estimatedRangeSettlement,
         uint setllementPercentageSplit,
-        string memory attorneyIncentiveFeeStructure, 
+        string memory attorneyIncentiveFeeStructure 
         
-        string memory caseURI) public returns(uint) {
+        //string memory caseURI
+        ) 
+        public returns(uint) {
         require(msg.sender == caseOwner, "You are not authorized to register this case on behalf of the plaintiff account specified."); // can only register case from account associated with plaintiff (maybe change?)
         //require(CivilCases[caseId].caseOwner == null || CivilCases[caseId.caseOwner == msg.sender, "You are not authorized to amend information for this case."]) // ensure case not already registered
         //Implement registerCivilCase
@@ -117,9 +121,8 @@ contract LawToken is ERC721Full {
       
         fundingDeadline = now + 30 days;
       
-        _mint(caseOwner, caseId, 0);
-        _setTokenURI(caseId, caseURI);
-      
+        ///_mint(caseOwner, caseId, 0);
+              
         CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, "No firm assigned.", 0,0,0,0,0,0, fundingDeadline);
 
         return caseId;
@@ -138,7 +141,7 @@ contract LawToken is ERC721Full {
         uint firmID = firmCounter.current();
         
         _mint(msg.sender, firmID);
-        _setTokenURI(firmID, firmURI);
+        //_setTokenURI(firmID, firmURI);
         
         firms[firmID] = LawFirm(msg.sender,firmName, practceArea, state, city, message, 0);
         
@@ -164,7 +167,7 @@ contract LawToken is ERC721Full {
         address payable _plaintiff = CivilCases[caseId].caseOwner;
 
         _mint(_plaintiff, bidID);
-        _setTokenURI(bidID, bidURI);
+        //_setTokenURI(bidID, bidURI);
         
         // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
         bids[caseId].push(Bid(bidID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message));
@@ -195,19 +198,41 @@ contract LawToken is ERC721Full {
     
 // funding the civil case
     function fundingcase( uint newFundingAmount) public payable {
-        tokenCounter.increment();
-        uint fundingRef = tokenCounter.current();
+        fundingCounter.increment();
+        uint fundingRef = fundingCounter.current();
         CivilCases[fundingRef] = CivilCase( newFundingAmount);
         require(msg.value < CivilCases[fundingRef].newFundingAmount, "The amount to invest exceeded the asking funding.");
         caseBalance = address(this).balance;
         require(CivilCases[fundingRef].newFundingAmount == caseBalance, "The civil case has not be funded");
     }
-    /// Withdraw the funding.
     
+     /// withdraw to pay attorney and case expenses
+    function withdraw(address payable newcaseOwner) public{
+        withdrawCounter.increment();
+        uint withdrawgRef = withdrawCounter.current();
+        CivilCases[withdrawgRef] = CivilCase( newcaseOwner);
+        require( msg.sender == CivilCases[withdrawgRef].newcaseOwner, "You do not own this account");
+        require( now >= unlockTime, "Your account is currently locked");
+        uint amount = WithdrawFunds[msg.sender];
+        if (lastToWithdraw != msg.sender) {
+            lastToWithdraw = msg.sender;
+        }
+        lastWithdrawAmount = amount;
+        lastWithdrawBlock = block.number;
+        if (amount > address(this).balance / 5){
+        unlockTime = now + 5 days;
+        }
+    }
         
-//---------------------------Minting--------------------------------------------------------------------------------------
+    //In case the funding amount is not full fill return the fundings to investors
+    function cancelCivilCase(address investor) public view returns (uint) {
+        return returnFunds[investor];
+        }
+    }
         
-contract LawToken is ERC20, ERC20Detailed {
+///---------------------------Minting--------------------------------------------------------------------------------------
+        
+contract LawTokenMinting is ERC20, ERC20Detailed {
     address payable owner;
     mapping(address => uint) balances;
     // address payable owner = msg.sender;
@@ -238,36 +263,19 @@ contract LawToken is ERC20, ERC20Detailed {
     }
 }
 
-
-    function withdraw(address payable newcaseOwner) public{
-        tokenCounter.increment();
-        uint withdrawgRef = tokenCounter.current();
-        CivilCases[withdrawgRef] = CivilCase( newcaseOwner);
-        require( msg.sender == CivilCases[withdrawgRef].newcaseOwner, "You do not own this account");
-        require( now >= unlockTime, "Your account is currently locked");
-        uint amount = WithdrawFunds[msg.sender];
-        if (lastToWithdraw != msg.sender) {
-            lastToWithdraw = msg.sender;
-        }
-        lastWithdrawAmount = amount;
-        lastWithdrawBlock = block.number;
-        if (amount > address(this).balance / 5){
-        unlockTime = now + 5 days;
-        }
-
-//---------------------------------------------------------------------------------------------
+///---------------------------------------------------------------------------------------------
 
 // Distribution
-contract investmentRemittance {
+contract investmentRemittance is ERC721Full  {
     // Should always return 0! Use this to test your `deposit` function's logic
     function balance() public view returns(uint) {
         return address(this).balance;
     }
     //calculate investment percentage and create new array
-    function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
-        for(uint i = 0; i < investmentPCT.length; ++i) {
-            investmentPCT[i] = (investmentAmount[i] / fundingAmount);
-        }}
+    // function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
+    //     for(uint i = 0; i < investmentPCT.length; ++i) {
+    //         investmentPCT[i] = (investmentAmount[i] / fundingAmount);
+    //    }}
     //payout function
     function remitSettlement (
         address payable caseOwner,
