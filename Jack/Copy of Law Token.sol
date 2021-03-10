@@ -4,8 +4,10 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20Detailed.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/Crowdsale.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/emission/MintedCrowdsale.sol";
 
-
+import "./equityCoin.sol";
 
 contract LawToken is ERC721Full {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
@@ -119,10 +121,13 @@ contract LawToken is ERC721Full {
         _mint(caseOwner, caseId, 0);
         _setTokenURI(caseId, caseURI);
       
-        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, "No firm assigned.", 0,0,0,0,0,0, fundingDeadline);
+        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, "No firm assigned.", 0,0);
 
         return caseId;
         }
+
+//-------------------------Bidding-------------------------------------------------------------------------
+    //-----------------------Law Firm Actions-------------------------------------------------------------
         
     function registerLawFirm(
         string memory firmName,
@@ -139,7 +144,7 @@ contract LawToken is ERC721Full {
         _mint(msg.sender, firmID);
         _setTokenURI(firmID, firmURI);
         
-        firms[firmID] = LawFirm(msg.sender,firmName, practceArea, state, city, message, 0);
+        firms[firmID] = LawFirm(msg.sender,firmName, practceArea, state, city, message);
         
         return firmID;
         }
@@ -172,6 +177,7 @@ contract LawToken is ERC721Full {
         emit bidPlaced(caseId);
         
     }
+    //------------------------Plaintiff Actions-----------------------------------------------------------------------
 
     function viewBids(uint caseId) public {
         require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to review bids for this case.");
@@ -203,9 +209,9 @@ contract LawToken is ERC721Full {
     /// Withdraw the funding.
     
         
-//---------------------------Minting--------------------------------------------------------------------------------------
+//---------------------------ERC20 Minting--------------------------------------------------------------------------
         
-contract LawToken is ERC20, ERC20Detailed {
+contract equityCoinSale is Crowdsale, MintedCrowdsale {
     address payable owner;
     mapping(address => uint) balances;
     // address payable owner = msg.sender;
@@ -236,6 +242,7 @@ contract LawToken is ERC20, ERC20Detailed {
     }
 }
 
+//---------------------------Withdraw Function------------------------------------------------------------------------
 
     function withdraw(address payable newcaseOwner) public{
         tokenCounter.increment();
@@ -253,9 +260,8 @@ contract LawToken is ERC20, ERC20Detailed {
         unlockTime = now + 5 days;
         }
 
-//---------------------------------------------------------------------------------------------
+//-----------------------------Distribution----------------------------------------------------------------------------
 
-// Distribution
 contract investmentRemittance {
     // Should always return 0! Use this to test your `deposit` function's logic
     function balance() public view returns(uint) {
