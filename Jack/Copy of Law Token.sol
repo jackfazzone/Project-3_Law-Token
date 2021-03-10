@@ -67,7 +67,6 @@ contract LawToken is ERC721Full {
     }
     
     struct Bid {
-        uint caseId;
         address payable lawFirm;
         uint firmID;
         string firmName;
@@ -170,7 +169,7 @@ contract LawToken is ERC721Full {
         //_setTokenURI(bidID, bidURI);
         
         // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
-        bids[caseId].push(Bid(bidID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message));
+        bids[caseId][bidID].push(Bid(msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message));
         
         return bidID;
         emit bidPlaced(caseId);
@@ -186,7 +185,6 @@ contract LawToken is ERC721Full {
     function selectBid(uint caseId, uint bidID) public {
         require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
         
-        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
         CivilCases[caseId].firmName = bids[caseId][bidID].firmName;
         CivilCases[caseId].firmEquity = bids[caseId][bidID].firmEquity;
         CivilCases[caseId].fundingDeadline = bids[caseId][bidID].fundingDeadline;
