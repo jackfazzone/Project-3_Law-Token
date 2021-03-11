@@ -5,18 +5,18 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20Mintable.sol";
 
 contract LawTokenMinting is ERC20, ERC20Detailed {
-    address payable owner;
+    address payable caseOwner;
     mapping(address => uint) balances;
     // address payable owner = msg.sender;
 
     modifier onlyOwner {
-        require(msg.sender == owner, "You do not have permission to mint these tokens!");
+        require(msg.sender == caseOwner, "You do not have permission to mint these tokens!");
         _;
     }
 
     constructor(uint initial_supply) ERC20Detailed("LawToken", "LAWT", 18) public {
-        owner = msg.sender;
-        _mint(owner, initial_supply);
+        caseOwner = msg.sender;
+        _mint(caseOwner, initial_supply);
     }
     
     //calculate investment percentage and create new array   

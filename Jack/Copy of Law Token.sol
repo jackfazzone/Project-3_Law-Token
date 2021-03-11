@@ -126,17 +126,9 @@ contract LawToken is ERC721Full, MintedCrowdsale {
       
         fundingDeadline = now + 30 days;
       
-<<<<<<< HEAD
-        _mint(caseOwner, caseId, 0);
         _setTokenURI(caseId, caseURI);
       
         CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, "No firm assigned.", 0,0);
-=======
-        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, firm, 0, 0);
->>>>>>> 6fb6248ffc36ff631cc4ce71581e82e903bacf8c
-
-        return caseId;
-        }
 
 //-------------------------Bidding-------------------------------------------------------------------------
     //-----------------------Law Firm Actions-------------------------------------------------------------
