@@ -38,9 +38,7 @@ contract LawToken is ERC721Full {
     
     using Counters for Counters.Counter;
     Counters.Counter tokenCounter;
-    Counters.Counter fundingCounter;
-    Counters.Counter withdrawCounter;
-    
+        
     struct CivilCase {
       //Implement CivilCases struct
       address payable caseOwner;

@@ -14,13 +14,9 @@ import "./equityCoin.sol";
 
 contract LawToken is ERC721Full, MintedCrowdsale {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
-     // bool public ended;
-    //address payable public caseOwner;
+     
     bool public ended;
-    //uint fundingAmount;
-    //uint public amount;
     uint public caseBalance;
-    //uint estimatedSettlement;
     address public lastToWithdraw;
     uint public lastWithdrawBlock;
     uint public lastWithdrawAmount;
@@ -29,26 +25,21 @@ contract LawToken is ERC721Full, MintedCrowdsale {
     uint unlockTime;
     
     mapping(address => uint) returnFunds;
-    
-    //mapping(address => uint) litigants;
-    
+        
     // Allowed withdrawals of the case funding
     mapping(address => uint) WithdrawFunds;
-    
-    
+        
      // end the case 
     event fundingEnded(address investor, uint estimatedSettlement);
 
-    constructor() ERC721Full("LawToken", "CLS") public { }
+    constructor() ERC721Full("LawToken", "LAWT") public { }
 
     using Counters for Counters.Counter;
     Counters.Counter caseCounter;
     Counters.Counter firmCounter;
     Counters.Counter bidCounter;
-    Counters.Counter fundingCounter;
-    Counters.Counter withdrawCounter;
-    
 
+// structures 
     struct CivilCase {
       //Implement CivilCases struct
       address payable plaintiff;
@@ -81,7 +72,6 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         uint fundingDeadline;
         string message;
         
-    
     }
 
     // Stores tokenCounter => CivilCase
@@ -181,7 +171,13 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         emit caseAssigned(caseId);
         
     }    
-    
+
+//In case the funding amount is not full fill return the fundings to investors
+    function cancelCivilCase(address investor) public view returns (uint) {
+        return returnFunds[investor];
+        }
+    }
+
 // funding the civil case
     function fundingcase(uint caseId) public payable {
         require(msg.value < CivilCases[caseId].fundingAmount, "The amount to invest exceeded the asking funding.");
@@ -236,17 +232,6 @@ contract equityCoinSale is Crowdsale, MintedCrowdsale {
     }
 }
 
-//---------------------------Withdraw Function------------------------------------------------------------------------
-
-        
-    //In case the funding amount is not full fill return the fundings to investors
-    function cancelCivilCase(address investor) public view returns (uint) {
-        return returnFunds[investor];
-        }
-    }
-        
-///---------------------------Minting--------------------------------------------------------------------------------------
-        
 
 
 <//-----------------------------Distribution----------------------------------------------------------------------------
