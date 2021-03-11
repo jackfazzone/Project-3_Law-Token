@@ -114,5 +114,5 @@ contract LawToken is ERC721Full {
       
     }
       
-      }
+      
       

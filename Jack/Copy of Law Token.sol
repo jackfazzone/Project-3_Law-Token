@@ -97,25 +97,14 @@ contract LawToken is ERC721Full, MintedCrowdsale {
 // What if we list and mint with empty values on the attorney/ firm params and then update them after assignment with an "Attorney Assigned" emission?
 
 
-    function registerCivilCase(address payable caseOwner,
-        string memory caseArea,
+    function registerCivilCase(
+        address payable caseOwner,
         string memory caseDescription,
-        string memory eventLocation,
-        string memory eventDate,
-        string memory plaintiffInjury,
+        string memory caseArea,
         string memory defendant,
-        uint totalSuitExpenses,             // given by assigned attorney or average?
         string memory firm,
-       // address payable lawFirm,
-        string memory attorney,             
-        uint fundingAmount,                 // up-front cash bid of winning firm (crowdsale goal)
-        uint firmEquity,                    
-        uint fundingDeadline,
-        string memory estimatedRangeSettlement,
-        uint setllementPercentageSplit,
-        string memory attorneyIncentiveFeeStructure 
-        
-        //string memory caseURI
+        uint fundingAmount,
+        uint fundingDeadline
         ) 
         public returns(uint) {
         require(msg.sender == caseOwner, "You are not authorized to register this case on behalf of the plaintiff account specified."); // can only register case from account associated with plaintiff (maybe change?)
@@ -126,10 +115,9 @@ contract LawToken is ERC721Full, MintedCrowdsale {
       
         fundingDeadline = now + 30 days;
       
-        _setTokenURI(caseId, caseURI);
-      
-        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, "No firm assigned.", 0,0);
+        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, firm, fundingAmount, fundingDeadline);
 
+        return caseId;
 //-------------------------Bidding-------------------------------------------------------------------------
     //-----------------------Law Firm Actions-------------------------------------------------------------
         
@@ -195,16 +183,26 @@ contract LawToken is ERC721Full, MintedCrowdsale {
     }    
     
 // funding the civil case
-    function fundingcase( uint newFundingAmount) public payable {
-        fundingCounter.increment();
-        uint fundingRef = fundingCounter.current();
-        CivilCases[fundingRef] = CivilCase( newFundingAmount);
-        require(msg.value < CivilCases[fundingRef].newFundingAmount, "The amount to invest exceeded the asking funding.");
+    function fundingcase(uint caseId) public payable {
+        require(msg.value < CivilCases[caseId].fundingAmount, "The amount to invest exceeded the asking funding.");
         caseBalance = address(this).balance;
-        require(CivilCases[fundingRef].newFundingAmount == caseBalance, "The civil case has not be funded");
+        require(CivilCases[caseId].fundingAmount == caseBalance, "The civil case has not be funded");
     }
     
+    /// withdraw to pay attorney and case expenses
+    function withdraw(uint caseId) public{
+        require( msg.sender == CivilCases[caseId].caseOwner, "You do not own this account");
+        require( now >= unlockTime, "Your account is currently locked");
+        uint amount = WithdrawFunds[msg.sender];
         
+        if (lastToWithdraw != msg.sender) {
+            lastToWithdraw = msg.sender;
+        }
+        lastWithdrawAmount = amount;
+        lastWithdrawBlock = block.number;
+        
+        if (amount > address(this).balance / 5){
+        unlockTime = now + 5 days;    
 //---------------------------ERC20 Minting--------------------------------------------------------------------------
         
 contract equityCoinSale is Crowdsale, MintedCrowdsale {
@@ -240,23 +238,6 @@ contract equityCoinSale is Crowdsale, MintedCrowdsale {
 
 //---------------------------Withdraw Function------------------------------------------------------------------------
 
-     /// withdraw to pay attorney and case expenses
-    function withdraw(address payable newcaseOwner) public{
-        withdrawCounter.increment();
-        uint withdrawgRef = withdrawCounter.current();
-        CivilCases[withdrawgRef] = CivilCase( newcaseOwner);
-        require( msg.sender == CivilCases[withdrawgRef].newcaseOwner, "You do not own this account");
-        require( now >= unlockTime, "Your account is currently locked");
-        uint amount = WithdrawFunds[msg.sender];
-        if (lastToWithdraw != msg.sender) {
-            lastToWithdraw = msg.sender;
-        }
-        lastWithdrawAmount = amount;
-        lastWithdrawBlock = block.number;
-        if (amount > address(this).balance / 5){
-        unlockTime = now + 5 days;
-        }
-    }
         
     //In case the funding amount is not full fill return the fundings to investors
     function cancelCivilCase(address investor) public view returns (uint) {
