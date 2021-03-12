@@ -18,19 +18,21 @@ function balance() public view returns(uint) {
         address payable beneficiary,
         address payable[] memory recipient,
         uint[] memory investmentX,
-        uint SettlementAmount)
+        uint SettlementAmount,
+        uint firmEquity,
+        uint plaintiffEquity)
         public {
         uint acctBal = SettlementAmount / 100;
         uint total;
         uint amount;
         
         // Transfer lawyer equity to lawyer
-        amount = acctBal * 10; //change % to variable set in lawyer equity
+        amount = acctBal * firmEquity; //change % to variable set in lawyer equity
         total += amount;
         caseOwner.transfer(amount);
         
         //Transfer victim equity to victim
-        amount = acctBal * 10; //change % to variable set by lawyer
+        amount = acctBal * plaintiffEquity; //change % to variable set by lawyer
         total += amount;
         beneficiary.transfer(amount);
         
@@ -51,4 +53,3 @@ function balance() public view returns(uint) {
 
    
     }
-    
