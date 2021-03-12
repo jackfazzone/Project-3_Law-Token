@@ -233,78 +233,58 @@ contract equityCoinSale is Crowdsale, MintedCrowdsale {
 
 <//-----------------------------Distribution----------------------------------------------------------------------------
 
-contract investmentRemittance {
-///---------------------------------------------------------------------------------------------
-
-// Distribution
-contract settlementDistribution  {
-    
-    address payable depositorAccount = 0xc3879B456DAA348a16B6524CBC558d2CC984722c;
-    
-    // depositing settlement in contract (tailor to depositing)
-    function deposit(uint SettlementAmount, address payable depositor) public payable {
-    require(depositor == depositorAccount, "You are not authorized to deposit to this contract");
-    
-    SettlementAmount = address(this).balance;
-  }
-  
-  
-   // Should always return 0! Use this to test your `deposit` function's logic
-    function balance() public view returns(uint) {
+function balance() public view returns(uint) {
         return address(this).balance;
     }
     
     
-    //create lists *********************************
+    // depositing settlement in contract (tailor to depositing)
+    function deposit(uint SettlementAmount, uint caseId) public payable {
+    require(msg.sender == CivilCases[caseId].caseOwner, "You are not authorized to deposit to this contract");
+    require(balance() == 0);
     
-    
-    
-    //calculate investment percentage and create new array
-    function investmentWeighting(uint[] memory investmentAmount, uint[] memory investmentPCT, uint fundingAmount) private {
-         for(uint i = 0; i < investmentPCT.length; ++i) {
-            investmentPCT[i] = (investmentAmount[i] / fundingAmount);
-        }}
-        
-        
-        
+    SettlementAmount = balance();
+  }
+  
+
     //payout function
     function remitSettlement (
         address payable caseOwner,
         address payable beneficiary,
-        address payable[] memory investorList,
-        uint[] memory investmentPCT,
-        uint SettlementAmount)
+        address payable[] memory recipient,
+        uint[] memory investmentX,
+        uint SettlementAmount,
+        uint firmEquity,
+        uint plaintiffEquity)
         public {
         uint acctBal = SettlementAmount / 100;
         uint total;
         uint amount;
+        
         // Transfer lawyer equity to lawyer
-        amount = acctBal * 10; //change % to variable set in lawyer equity
+        amount = acctBal * firmEquity; //change % to variable set in lawyer equity
         total += amount;
         caseOwner.transfer(amount);
+        
         //Transfer victim equity to victim
-        amount = acctBal * 10; //change % to variable set by lawyer
+        amount = acctBal * plaintiffEquity; //change % to variable set by lawyer
         total += amount;
         beneficiary.transfer(amount);
+        
         //Transfer investors equity to investors
-        for (uint i=0; i<investorList.length; i++) {
-            investorList[i].transfer(acctBal * (investmentPCT[i]));
+        for (uint i=0; i<recipient.length; i++) {
+            recipient[i].transfer(acctBal * (investmentX[i]));
         }
+        
+        
         //Transfer balance to beneficiary
-        beneficiary.transfer(address(this).balance);
+        beneficiary.transfer(balance());
     }
     
 
     
 // has to be turned on eventually
    function() external payable {}
-or (uint i=0; i<investorList.length; i++) {
-            investorList[i].transfer(acctBal * (investmentPCT[i]));
-        }
-        //Transfer balance to beneficiary
-        beneficiary.transfer(address(this).balance);
+
+   
     }
-// has to be turned on eventually
-   //function() external payable {}
-}
- 
