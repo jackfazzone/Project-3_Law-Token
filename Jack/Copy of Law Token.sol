@@ -45,7 +45,8 @@ contract LawToken is ERC721Full, MintedCrowdsale {
       string defendant;
       string firm;
       uint firmEquity;
-      //uint plaintiffEquity ?              // privacy vs relevant investment information
+      uint fundingAmount;
+      //uint plaintiffEquity ?              
       uint fundingDeadline;
     }
     
@@ -60,11 +61,12 @@ contract LawToken is ERC721Full, MintedCrowdsale {
     }
     
     struct Bid {
+        uint bidID;
         uint caseId;
         address payable lawFirm;
         uint firmID;
         string firmName;
-        uint lumpSumBid;                                    // probably don't want to use a struct for this 
+        uint lumpSumBid;                                    
         uint equityBid;
         uint fundingDeadline;
         string message;
@@ -77,7 +79,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
     mapping(uint => LawFirm) public firms;
     mapping(uint => Bid) private bids;
 
-    event bidPlaced(uint caseId);
+    event bidPlaced(uint caseId, uint bidID);
     event caseAssigned(uint caseId);
     event caseSentenced(uint tokenId, string reportURI);
   
@@ -90,6 +92,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         string memory caseArea,
         string memory defendant,
         string memory firm,
+        uint firmEquity,
         uint fundingAmount,
         uint fundingDeadline
         ) 
@@ -102,7 +105,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
       
         fundingDeadline = now + 30 days;
       
-        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, firm, fundingAmount, fundingDeadline);
+        CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, firm, firmEquity, fundingAmount, fundingDeadline);
 
         return caseId;
         }
@@ -128,41 +131,49 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         
     function submitBid(address payable lawFirm,
         string memory firmName,
-        uint firmID,               // can probably cut one or two of these, but I'll leave them in in case we want to require that the three values match in our firms mapping
-        uint caseId,                        // maybe a list of bids isn't worth putting on-chain
+        uint firmID,               
+        uint caseId,                        
         uint lumpSumBid,
         uint equityBid,
         uint fundingDeadline,
-        string memory message,
-        string memory bidURI) private returns(uint) {
+        string memory message) private returns(uint) {
         require(msg.sender == lawFirm, "You are not authorized to submit this bid based on your provided credentials.");
         bidCounter.increment();
         uint bidID = bidCounter.current();
-        bids[caseId] = Bid(bidID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message);
+        bids[bidID] = Bid(bidID,caseId, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message);
         
+        emit bidPlaced(caseId,bidID);
         return bidID;
-        emit bidPlaced(caseId);    
     }
     //------------------------Plaintiff Actions-----------------------------------------------------------------------
 
-    // function viewBids(uint caseId) public {
-    //     require(CivilCases[caseId].plaintiff == msg.sender, "You are not authorized to review bids for this case.");
+    function viewBids(uint caseId, uint bidID) public view returns(uint, address, uint, string memory, uint, uint, uint, string memory) {
+        require(CivilCases[caseId].plaintiff == msg.sender, "You are not authorized to review bids for this case.");
         
-    //     return bids[caseId];
-    // }
+        // Citation:https://ethereum.stackexchange.com/questions/3609/returning-a-struct-and-reading-via-web3/3614#3614
+        return (bids[bidID].caseId, 
+        bids[bidID].lawFirm, 
+        bids[bidID].firmID, 
+        bids[bidID].firmName, 
+        bids[bidID].lumpSumBid, 
+        bids[bidID].equityBid, 
+        bids[bidID].fundingDeadline, 
+        bids[bidID].message);
+        
+    }
     
-    // function selectBid(uint caseId, uint bidID) public {
-    //     require(CivilCases[caseId].plaintiff == msg.sender, "You are not authorized to assign representation for this case.");
+    function selectBid(uint caseId, uint bidID) public {
+        require(CivilCases[caseId].plaintiff == msg.sender, "You are not authorized to assign representation for this case.");
         
-    //     // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
-    //     CivilCases[caseId].firmName = bids[caseId][bidID].firmName;
-    //     CivilCases[caseId].firmEquity = bids[caseId][bidID].firmEquity;
-    //     CivilCases[caseId].fundingDeadline = bids[caseId][bidID].fundingDeadline;
-    //     CivilCases[caseId].fundingAmount = bids[caseId][bidID].lumpSumBid;
+        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
+        CivilCases[caseId].firm = bids[bidID].firmName;
+        CivilCases[caseId].firmEquity = bids[bidID].equityBid;
+        CivilCases[caseId].fundingDeadline = bids[bidID].fundingDeadline;
+        CivilCases[caseId].fundingAmount = bids[bidID].lumpSumBid;
         
-    //     emit caseAssigned(caseId);
+        emit caseAssigned(caseId);
         
-    // }    
+    }    
 
 //In case the funding amount is not full fill return the fundings to investors
     function cancelCivilCase(address investor) public view returns (uint) {
@@ -179,7 +190,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
     
     /// withdraw to pay attorney and case expenses
     function withdraw(uint caseId) public{
-        require( msg.sender == CivilCases[caseId].caseOwner, "You do not own this account");
+        require( msg.sender == CivilCases[caseId].plaintiff, "You do not own this account");
         require( now >= unlockTime, "Your account is currently locked");
         uint amount = WithdrawFunds[msg.sender];
         
@@ -204,7 +215,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
     
     // depositing settlement in contract (tailor to depositing)
     function deposit(uint SettlementAmount, uint caseId) public payable {
-    require(msg.sender == CivilCases[caseId].caseOwner, "You are not authorized to deposit to this contract");
+    require(msg.sender == CivilCases[caseId].plaintiff, "You are not authorized to deposit to this contract");
     require(balance() == 0);
     
     SettlementAmount = balance();
