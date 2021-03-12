@@ -105,6 +105,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         CivilCases[caseId] = CivilCase(caseOwner, caseArea, caseDescription, defendant, firm, fundingAmount, fundingDeadline);
 
         return caseId;
+        }
 //-------------------------Bidding-------------------------------------------------------------------------
     //-----------------------Law Firm Actions-------------------------------------------------------------
         
@@ -113,9 +114,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         string memory practceArea,
         string memory state,
         string memory city,
-        string memory message,
-        
-        string memory firmURI) public returns(uint) {
+        string memory message) public returns(uint) {
         
         firmCounter.increment();
         uint firmID = firmCounter.current();
@@ -129,7 +128,7 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         
     function submitBid(address payable lawFirm,
         string memory firmName,
-        string memory firmID,               // can probably cut one or two of these, but I'll leave them in in case we want to require that the three values match in our firms mapping
+        uint firmID,               // can probably cut one or two of these, but I'll leave them in in case we want to require that the three values match in our firms mapping
         uint caseId,                        // maybe a list of bids isn't worth putting on-chain
         uint lumpSumBid,
         uint equityBid,
@@ -139,41 +138,37 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         require(msg.sender == lawFirm, "You are not authorized to submit this bid based on your provided credentials.");
         bidCounter.increment();
         uint bidID = bidCounter.current();
-        bids[bidID] = Bid(0, lawFirm, firmName )
-        address payable _plaintiff = CivilCases[caseId].caseOwner;
-        _mint(_plaintiff, bidID);
-        _setTokenURI(bidID, bidURI);
-        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
-        bids[caseId][bidID].push(Bid(msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message));
+        bids[caseId] = Bid(bidID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message);
+        
         return bidID;
         emit bidPlaced(caseId);    
     }
     //------------------------Plaintiff Actions-----------------------------------------------------------------------
 
-    function viewBids(uint caseId) public {
-        require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to review bids for this case.");
+    // function viewBids(uint caseId) public {
+    //     require(CivilCases[caseId].plaintiff == msg.sender, "You are not authorized to review bids for this case.");
         
-        return bids[caseId];
-    }
+    //     return bids[caseId];
+    // }
     
-    function selectBid(uint caseId, uint bidID) public {
-        require(CivilCases[caseId].caseOwner == msg.sender, "You are not authorized to assign representation for this case.");
+    // function selectBid(uint caseId, uint bidID) public {
+    //     require(CivilCases[caseId].plaintiff == msg.sender, "You are not authorized to assign representation for this case.");
         
-        // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
-        CivilCases[caseId].firmName = bids[caseId][bidID].firmName;
-        CivilCases[caseId].firmEquity = bids[caseId][bidID].firmEquity;
-        CivilCases[caseId].fundingDeadline = bids[caseId][bidID].fundingDeadline;
-        CivilCases[caseId].fundingAmount = bids[caseId][bidID].lumpSumBid;
+    //     // Citation: https://ethereum.stackexchange.com/questions/62824/how-can-i-build-this-list-of-addresses
+    //     CivilCases[caseId].firmName = bids[caseId][bidID].firmName;
+    //     CivilCases[caseId].firmEquity = bids[caseId][bidID].firmEquity;
+    //     CivilCases[caseId].fundingDeadline = bids[caseId][bidID].fundingDeadline;
+    //     CivilCases[caseId].fundingAmount = bids[caseId][bidID].lumpSumBid;
         
-        emit caseAssigned(caseId);
+    //     emit caseAssigned(caseId);
         
-    }    
+    // }    
 
 //In case the funding amount is not full fill return the fundings to investors
     function cancelCivilCase(address investor) public view returns (uint) {
         return returnFunds[investor];
         }
-    }
+    
 
 // funding the civil case
     function fundingcase(uint caseId) public payable {
@@ -195,45 +190,14 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         lastWithdrawBlock = block.number;
         
         if (amount > address(this).balance / 5){
-        unlockTime = now + 5 days;    
-//---------------------------ERC20 Minting--------------------------------------------------------------------------
-        
-contract equityCoinSale is Crowdsale, MintedCrowdsale {
-    address payable owner;
-    mapping(address => uint) balances;
-    // address payable owner = msg.sender;
-
-    modifier onlyOwner {
-        require(msg.sender == owner, "You do not have permission to mint these tokens!");
-        _;
-    }
-
-    constructor(uint initial_supply) ERC20Detailed("LawToken", "LAWT", 18) public {
-        owner = msg.sender;
-        _mint(owner, initial_supply);
-    }
-    
-    //calculate investment percentage and create new array   
-    function investmentDistribution(address[] memory recipient, uint[] memory investmentAmount, uint[] memory investmentX, uint fundingAmount) public {
-        for(uint i = 0; i < investmentX.length; ++i) {
-            investmentX[i] = (investmentAmount[i] / fundingAmount);
-            mint(recipient[i], investmentX[i] * fundingAmount);
-            }
+        unlockTime = now + 5 days;  
+        }
         
     }
-    
 
-    function mint(address recipient, uint amount) public onlyOwner {
-        balances[recipient] = balances[recipient].add(amount);
-        _mint(recipient, amount);
-    }
-}
+//-----------------------------Distribution----------------------------------------------------------------------------
 
-
-
-<//-----------------------------Distribution----------------------------------------------------------------------------
-
-function balance() public view returns(uint) {
+    function balance() public view returns(uint) {
         return address(this).balance;
     }
     
