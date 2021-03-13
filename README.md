@@ -55,13 +55,11 @@ How to implement the system ?
 ## Settlement
 ![Improvements](Images/s9.png)
 
-III. Once judgment ETH reaches contract, distribute balance according to addresses' respective equity<br>
+Our goal here is to give investors their return on the settlement. One of the first thing we do is safeguard this portion by permitting only specific addresses to deposit the settlement amount to the smart contract. <br><br>
 
-Our goal here is to give investors their return on the settlement. One of the first thing we do is safeguard this portion by permitting only specific addresses to deposit the settlement amount to the smart contract. 
+In our first platform rollout, we don't actually issue a token exchange (as the token is a stake not just in the case but has the possibility to signify a stake in Squire itself in the future) but a direct return to the investing address. <br><br>
 
-In our first platform rollout, we don't actually issue a token exchange (as the token is a stake not just in the case but has the possibility to signify a stake in Squire itself in the future) but a direct return to the investing address. 
-
-Initially created weighted arrays code (in draft) but the code is ended up in the minting portion, and in this ortion we utilize those arrays to disperse the investments while saving on transfer costs. In addition, the attorney's equity is a variable that depends on the amount of the settlement.
+In this ortion we utilize arrays to disperse the investments while saving on transfer costs. In addition, the attorney's equity is a variable that depends on the amount of the settlement.<br><br>
 
 Lastly, any balance is sent back to the plaintiff.<br><br>
 
