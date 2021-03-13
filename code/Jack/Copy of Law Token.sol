@@ -1,22 +1,25 @@
 pragma solidity ^0.5.0;
+
 import "lawTokenMintable.sol";
+import "equityCoin.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC721/ERC721Full.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/drafts/Counters.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/token/ERC20/ERC20Detailed.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/Crowdsale.sol";
+//import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/Crowdsale.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.5.0/contracts/crowdsale/emission/MintedCrowdsale.sol";
 
-import "./equityCoin.sol";
 
-contract LawToken is ERC721Full, MintedCrowdsale {
+contract LawToken is Crowdsale, MintedCrowdsale {
     // for the bundled equity, should we just index the cases by a parameter (case area?) and then iterate through and bundle every 20?
-     
+    
+    //address payable newCaseOwner = 0x8D25F051DDb033DA5424c3af471961298E2C7Abd;
     bool public ended;
     uint public caseBalance;
     address public lastToWithdraw;
     uint public lastWithdrawBlock;
     uint public lastWithdrawAmount;
+   
     
     
     uint unlockTime;
@@ -28,8 +31,6 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         
      // end the case 
     event fundingEnded(address investor, uint estimatedSettlement);
-
-    constructor() ERC721Full("LawToken", "LAWT") public { }
 
     using Counters for Counters.Counter;
     Counters.Counter caseCounter;
@@ -61,8 +62,8 @@ contract LawToken is ERC721Full, MintedCrowdsale {
     }
     
     struct Bid {
-        uint bidID;
         uint caseId;
+        uint bidID;
         address payable lawFirm;
         uint firmID;
         string firmName;
@@ -73,15 +74,22 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         
     }
 
+    Bid[] public bids;
+    
     // Stores tokenCounter => CivilCase
     // Only permanent data that you would need to use in a smart contract later should be stored on-chain
     mapping(uint => CivilCase) public CivilCases;
     mapping(uint => LawFirm) public firms;
-    mapping(uint => Bid) private bids;
+    //mapping(uint => Bid) private bids;
 
-    event bidPlaced(uint caseId, uint bidID);
+    //Citation: https://www.youtube.com/watch?v=jaMHPT-78HM
+    event bidPlaced(uint date, uint indexed caseId, uint indexed bidID);
     event caseAssigned(uint caseId);
     event caseSentenced(uint tokenId, string reportURI);
+    
+    constructor(uint rate,
+        address payable wallet,
+        LawTokenMinting token )  Crowdsale(rate, wallet, token) public { }
   
 // What if we list and mint with empty values on the attorney/ firm params and then update them after assignment with an "Attorney Assigned" emission?
 
@@ -136,29 +144,35 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         uint lumpSumBid,
         uint equityBid,
         uint fundingDeadline,
-        string memory message) private returns(uint) {
+        string memory message) public returns(uint, uint) {
         require(msg.sender == lawFirm, "You are not authorized to submit this bid based on your provided credentials.");
+        
         bidCounter.increment();
         uint bidID = bidCounter.current();
-        bids[bidID] = Bid(bidID,caseId, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message);
         
-        emit bidPlaced(caseId,bidID);
-        return bidID;
+        Bid memory _bid = Bid(caseId, bidID, msg.sender, firmID, firmName, lumpSumBid, equityBid, fundingDeadline, message);
+        
+        bids.push(_bid);
+        
+        emit bidPlaced(now,caseId,bidID);
+        return (bidID, caseId);
+        
     }
     //------------------------Plaintiff Actions-----------------------------------------------------------------------
 
-    function viewBids(uint caseId, uint bidID) public view returns(uint, address, uint, string memory, uint, uint, uint, string memory) {
+    function viewBids(uint caseId) public view  {
         require(CivilCases[caseId].plaintiff == msg.sender, "You are not authorized to review bids for this case.");
+        bids[caseId];
         
         // Citation:https://ethereum.stackexchange.com/questions/3609/returning-a-struct-and-reading-via-web3/3614#3614
-        return (bids[bidID].caseId, 
-        bids[bidID].lawFirm, 
-        bids[bidID].firmID, 
-        bids[bidID].firmName, 
-        bids[bidID].lumpSumBid, 
-        bids[bidID].equityBid, 
-        bids[bidID].fundingDeadline, 
-        bids[bidID].message);
+        // return Bid(bidID,
+        // bids[bidID].lawFirm, 
+        // bids[bidID].firmID, 
+        // bids[bidID].firmName, 
+        // bids[bidID].lumpSumBid, 
+        // bids[bidID].equityBid, 
+        // bids[bidID].fundingDeadline, 
+        // bids[bidID].message);
         
     }
     
@@ -174,6 +188,10 @@ contract LawToken is ERC721Full, MintedCrowdsale {
         emit caseAssigned(caseId);
         
     }    
+    
+    function getCaseInfo(uint caseId) view public {
+        return CivilCases[caseId];
+    }
 
 //In case the funding amount is not full fill return the fundings to investors
     function cancelCivilCase(address investor) public view returns (uint) {
