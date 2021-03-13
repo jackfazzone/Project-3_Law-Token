@@ -17,35 +17,19 @@
 <br>
 <h2> Project Pipeline</h2>
 
-## LawToken.sol
 ![Token](Images/s3.png)
-
-I. Create a function to initiate case on the blockchain. Function should require: <br>
-<ol>A. Attorney details: 
-<ol>Name of attorney </li><br>
-Name of law firm</ol></li></ol>
 	
 ![case](Images/s4.png)
+* To start the process the plaintiff or the attorney need to register de civil case inputting some information about the case such as case description, area, defendant, firm, funding amount needed to proceed with the case, and funding deadline. Squire has a policy of 30 days deadline after register the civil case to complete the funding.
+Registration civil case allows potential investors to decide weather or not they want to invest in a specific case.
+
 ![bidding](Images/s5.png)
+
 ![functions](Images/s6.png)
-
-<ol>B. Case details:
-<ol>Description of case </li><br>
-Date and location of accident </li><br>
-Details of injury to victim </li><br>
-Opposing insurance company </li><br>
-Estimated value of damage </ol></li></ol>
-
-<ol>C. Financial details:
-<ol> Amount requested to fund case (attorney's expenses) </li><br>
-Deadline to secure funding </li><br>
-Estimated range of settlement </li><br>
-Setllement percentage split </li><br>
-Graduated incentive fee structure of attorney </li></ol></ol>
-
-
-II. Once value determined in <strong><em>step I</em></strong> is reached, mint tokens that represent equity in judgment to attorney and investors<br>
-
+* The function funding amount has some restrictions such as the maximum amount an investor can invest is the asking funding amount or the reminder to complete the funding amount. Also, the account balance must be equal to funding amount to proceed with the case.
+* Cancel civil case will be activated if the funding amount did not reach the asking amount. In that ase the LAWT will be return to investors.
+* Withdraw function allows the plaintiff or attorney to used the fund to cover the case expenses. In addition, the withdraw amount must be a maximum a fifth of the account balance and each withdraw have to be five days apart otherwise the account will be block. 
+  
 ## Minting
 ![minting](Images/s7.png)
 
@@ -76,12 +60,12 @@ III. Once judgment ETH reaches contract, distribute balance according to address
 IV. Bundled equities in numerous cases to further diversify risk and facilitate financing<br><br>
 
 
-## Potential Additions
+## Conclusion & Potential Additions
 
 ![Improvements](Images/s8.png)
+Conclusion 
+* Squire offers to host the funding and distribution of settlements of civil cases through smarts contracts which make more efficient the process as well as reduce the cost and the risk of the investment.
+* Also, since the term of the investments are written in a smart contract, the parties involve can trust the system.
 
-1. Use previous cases to predict total legal expenses and/or likely payment if case is won -- case scoring (machine learning?)<br>
-2. Transferrable tokens for each case or bundle (market exchange)<br>
-3. Nice-looking landing page listing open cases to invest in<br>
 
 
