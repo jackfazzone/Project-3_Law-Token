@@ -12,7 +12,7 @@
 ![why](Images/s2.png)
 
 ## Description
-<p>In civil litigation, when a potential plaintiff does not wish, or is not able, to foot the cost of legal services up front, many attorneys will elect to take a share of the possible judgment instead (~30% in many cases) on a contingency basis. In this way, the plaintiff is not required to pay anything if the case is not won. Law Token attempts facilitate third-party investments in these lawsuits, whereby Ether is offered to cover legal and other expenses in the case in exchange for tokenized equity in the judgment, should the case win. We hypothesize that in pooling the risk inherent to contingency payouts, Law Token would permit plaintiffs to secure funding without having to sell as much equity as 30%, a savings in the equity of the ultimate judgment which becomes especially important for cases involving high medical expenses resulting from injury, worker's compensation, and other lawsuits in which a large portion of the ultimate judgment essential to properly compensating the plaintiff.</p>
+<p>In civil litigation, when a potential plaintiff does not wish, or is not able, to foot the cost of legal services up front, many attorneys will elect to take a share of the possible judgment instead on a contingency basis. In this way, the plaintiff is not required to pay anything if the case is not won. Law Token attempts facilitate third-party investments in these lawsuits, whereby Ether is offered to cover legal and other expenses in the case in exchange for tokenized equity in the judgment, should the case win. We hypothesize that in pooling the risk inherent to contingency payouts, Law Token would permit plaintiffs to secure funding without having to sell as much equity as 40%, a savings in the equity of the ultimate judgment which becomes especially important for cases involving high medical expenses resulting from injury, worker's compensation, and other lawsuits in which a large portion of the ultimate judgment essential to properly compensating the plaintiff.</p>
 
 <br>
 <h2> Project Pipeline</h2>
@@ -24,6 +24,7 @@
 Registration civil case allows potential investors to decide weather or not they want to invest in a specific case.
 
 ![bidding](Images/s5.png)
+* If a plaintiff does not have representation assigned yet, they may register their case without the information related to the firm and funding. After it has been registered, the case will be viewable by firms seeking clients. Firms that have registered with Squire and have firmID numbers may bid to represent plaintiffs, and plaintiffs may view and compare various bids made for their cases by law firms. Once a plaintiff has decided which bid they would like to accept, they may do so and assign the winning firm to represent them by entering their caseId and the winning bid's bidID in the appropriate function. This will automatically assign the values provided in the bid itself to the corresponding values in the Civil Case's struct. Beyond being convenient, this method ensures that the two parties have identical terms of retainment (those submitted by the firm and accepted by the client) and that said terms are not subject to dispute later on.
 
 ![functions](Images/s6.png)
 * The function funding amount has some restrictions such as the maximum amount an investor can invest is the asking funding amount or the reminder to complete the funding amount. Also, the account balance must be equal to funding amount to proceed with the case.
@@ -72,6 +73,5 @@ Conclusion
 * Also, since the term of the investments are written in a smart contract, the parties involve can trust the system.
 
 * Bundled equities in numerous cases to further diversify risk and facilitate financing
-
 
 
