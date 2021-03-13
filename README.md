@@ -57,7 +57,13 @@ How to implement the system ?
 
 III. Once judgment ETH reaches contract, distribute balance according to addresses' respective equity<br>
 
-IV. Bundled equities in numerous cases to further diversify risk and facilitate financing<br><br>
+Our goal here is to give investors their return on the settlement. One of the first thing we do is safeguard this portion by permitting only specific addresses to deposit the settlement amount to the smart contract. 
+
+In our first platform rollout, we don't actually issue a token exchange (as the token is a stake not just in the case but has the possibility to signify a stake in Squire itself in the future) but a direct return to the investing address. 
+
+Initially created weighted arrays code (in draft) but the code is ended up in the minting portion, and in this ortion we utilize those arrays to disperse the investments while saving on transfer costs. In addition, the attorney's equity is a variable that depends on the amount of the settlement.
+
+Lastly, any balance is sent back to the plaintiff.<br><br>
 
 
 ## Conclusion & Potential Additions
@@ -66,6 +72,8 @@ IV. Bundled equities in numerous cases to further diversify risk and facilitate 
 Conclusion 
 * Squire offers to host the funding and distribution of settlements of civil cases through smarts contracts which make more efficient the process as well as reduce the cost and the risk of the investment.
 * Also, since the term of the investments are written in a smart contract, the parties involve can trust the system.
+
+* Bundled equities in numerous cases to further diversify risk and facilitate financing
 
 
 
